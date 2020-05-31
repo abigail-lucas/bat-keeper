@@ -24,3 +24,8 @@ This is a step-by-step guide on building this project. It is aimed at new develo
 - Activate your virtual environment by going into `venv/bin/` activating the python. `cd venv/bin/` and then `source activate`
 - Install dependencies with pip once your virtual environment is up. Do this with `pip install -r requirements.txt`
 - Once it is installed you are ready to boot the project. Although you will need the bot API key and you can do that by making your own bot on Discord' developer portal and putting that in a `.env` file.
+
+## TODO
+
+- Consider if I should ping the users or just mention their names
+- Move duplicate code to methods
