@@ -58,7 +58,7 @@ class PickMe(discord.Client):
                 # We filter based on viewing permissions
                 if(member.permissions_in(message.channel).view_channel):
                     if(member.status.value == "offline"):
-                        response += f"{member.name}\n"
+                        response += f"<@{member.id}>\n"
 
         if re.match(self.command_reg, message_content):
             # The command was invoked
