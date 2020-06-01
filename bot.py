@@ -14,6 +14,7 @@ class PickMe(discord.Client):
     command_reg = "(.pickme {\d} {\D*})|(.pickme {\d})|(.pickme)"
     command_amount_role_reg = "(.pickme {\d} {\D*})"
     command_amount_reg = ".pickme {\d}"
+    offline_reg = "?offline"
 
     async def on_ready(self):
         print(f"{self.user} has connected to Discord")
@@ -50,6 +51,15 @@ class PickMe(discord.Client):
             response += "Pick a number of random people based on the role visible on this channel:\n"
             response += ".pickme {amount} {role}\n"
             response += "```\n"
+
+        if message_content.startswith(self.offline_reg):
+            response += "Offline members:\n"
+            for member in message.guild.members:
+                # We filter based on viewing permissions
+                if(member.permissions_in(message.channel).view_channel):
+                    if(member.status.value == "offline"):
+                        response += f"{member.name}\n"
+
         if re.match(self.command_reg, message_content):
             # The command was invoked
             # First we filter based on the visible users
@@ -128,7 +138,8 @@ class PickMe(discord.Client):
                 picked = pool[random.randint(0, len(pool)-1)]
                 response = f"I have picked <@{picked.id}>"
 
-        await message.channel.send(response)
+        if response != "":
+            await message.channel.send(response)
 
 client = PickMe()
 client.run(TOKEN)
