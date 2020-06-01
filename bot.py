@@ -1,7 +1,7 @@
 import os
-import re
-import discord
 import random
+import discord
+import re as reg_match
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,10 +11,112 @@ class PickMe(discord.Client):
     '''
     PickMe bot
     '''
-    command_reg = "(.pickme {\d} {\D*})|(.pickme {\d})|(.pickme)"
-    command_amount_role_reg = "(.pickme {\d} {\D*})"
-    command_amount_reg = ".pickme {\d}"
-    offline_reg = "?offline"
+    # regex for the commands
+    command_reg = "(\?pickme {\d} {\D*})|(\?pickme {\d})|(\?pickme)"
+    command_amount_role_reg = "(\?pickme {\d} {\D*})"
+    command_amount_reg = "\?pickme {\d}"
+    offline_reg = "(\?offline)|(\?offline {\D*})"
+    offline_role_reg = "\?offline {\D*}"
+    help_reg = "\?help"
+
+    # help response
+    help_response = """Welcome to PickMe!
+
+Here is the command format:
+```
+?pickme                 - returns a single random user
+?pickme {amount}        - returns as many random users as the amount (max 5)
+?pickme {amount} {role} - returns as many random users with the role as the amount (max 5)
+
+?offline                - returns the list of offline members
+?offline {role}         - returns the lift of offline members with the given role
+
+?help                   - returns this help message
+```
+"""
+
+    def _get_members_by_role(self, role, members):
+        """
+        An internal method to filter member objects based on their role
+
+        - role: string
+        - members: array of Member objects
+
+        returns array of Member objects
+        """
+        response = []
+        for member in members:
+            for member_role in member.roles:
+                if(role == member_role.name):
+                    response.append(member)
+                    break
+        return response
+    
+    def _get_visible_members(self, chnl, members):
+        """
+        An internal method to filter member objects based on their permissions
+        for the channel.
+        This method filters based on the view_channel permission
+
+        - channel: Channel object
+        - members: array of Member objects
+
+        returns array of Member objects
+        """
+        response = []
+        for member in members:
+            if(member.permissions_in(chnl).view_channel):
+                response.append(member)
+        return response
+    
+    def _pick_members(self, amount, members):
+        """
+        An internal method to randomly pick members based on the amount given.
+        The amount must exceed the length of members.
+        
+        - amount: int
+        - members: array of Member objects
+
+        returns array of Member objects or False if error
+        """
+        picked_members = []
+        i = 0
+        # a while loop allows us to loop until we have enough members
+        if amount >= len(members):
+            return picked_members
+        while i < amount:
+            chosen = members[random.randint(0, len(members)-1)]
+            if chosen not in picked_members:
+                picked_members.append(chosen)
+                i += 1
+        return picked_members
+    
+    def _get_amount_index(self, command):
+        """
+        A small internal method to grab the amount index.
+        We can confidently grab a single character since we will never
+        have more than 5 for the amount. (regex also limits to 1 digit)
+
+        - command: string
+
+        returns index of amount
+        """
+        return command.find("{") + 1
+
+    def _get_role_indexes(self, command, start):
+        """
+        A small internal method to grab the indexes of the role.
+        Start should be the index of the amount.
+
+        - command: string
+        - start: int
+
+        returns array of start and stop indexes of the role
+        """
+        response = []
+        response.append(command.find("{", start) + 1)
+        response.append(command.find("}", response[0]))
+        return response
 
     async def on_ready(self):
         print(f"{self.user} has connected to Discord")
@@ -22,124 +124,78 @@ class PickMe(discord.Client):
     async def on_message(self, message):
         """
         The on_message call
-
-        The bot handles 4 messages:
-        .help
-            Displays the help page
-        .pickme
-            Picks one user that is visible in that channel
-        .pickme {amount}
-            Picks users up to the amount visible in that channel (max 5)
-        .pickme {amount} {role}
-            Picks users up to the amount visible in that channel (max 5),
-                filtered on the role.
         """
         message_content = message.content.lower()
-        response = ""
-        if message_content.startswith(".help"):
-            # Display our help message
-            response = "Welcome to PickMe!\n"
-            response += "\n"
-            response += "Here is the command format:\n"
-            response += "```\n"
-            response += "Pick a single random person visible on this channel:\n"
-            response += ".pickme\n"
-            response += "\n"
-            response += "Pick a number of random people visible on this channel:\n"
-            response += ".pickme {amount}\n"
-            response += "\n"
-            response += "Pick a number of random people based on the role visible on this channel:\n"
-            response += ".pickme {amount} {role}\n"
-            response += "```\n"
 
-        if message_content.startswith(self.offline_reg):
-            response += "Offline members:\n"
-            for member in message.guild.members:
-                # We filter based on viewing permissions
-                if(member.permissions_in(message.channel).view_channel):
-                    if(member.status.value == "offline"):
-                        response += f"<@{member.id}>\n"
-
-        if re.match(self.command_reg, message_content):
-            # The command was invoked
-            # First we filter based on the visible users
-            visible_members = []
-            for member in message.guild.members:
-                # We filter based on viewing permissions
-                if(member.permissions_in(message.channel).view_channel):
-                    visible_members.append(member)
-            
-            if re.match(self.command_amount_role_reg, message_content):
-                # .pickme {amount} {role}
-
-                # Get the amount by grabbing the index of it
-                a_s = message_content.find("{") + 1
-                a_e = message_content.find("}")
-                amount = int(message_content[a_s:a_e])  # Between { and }
-
-                # Get the role by grabbing the index it falls in
-                # Use the end of amount as the beginning of our search
-                r_s = message_content.find("{", a_e) + 1
-                # Use the beginning of the role as the beginning of our search
-                r_e = message_content.find("}", r_s)
-                role = message_content[r_s:r_e]  # Between { and }
-
-                pool = []
-                for viable in visible_members:
-                    for vrole in viable.roles:
-                        if(role == vrole.name):
-                            pool.append(viable)
-                            break  # break makes it a bit quicker if they have a lot of roles
-                if(amount > 5):  # Max 5
-                    response = "You can't pick more than 5 random users"
-                elif(len(pool) == 0):  # Pool needs to be more than 0
-                    response = f"There are no users matching the role `{role}`"
-                elif(len(pool) < amount):  # And bigger than the amount
-                    response = "There aren't enough users to pick from!"
-                else:
-                    picked_users = []
-                    i = 0
-                    while i < amount:
-                        # I opted for a while loop to exclude duplicates
-                        option = pool[random.randint(0, len(pool)-1)]
-                        if option not in picked_users:
-                            picked_users.append(option)
-                            i += 1
-                    for picked in picked_users:
-                        # Ping or we can do this:
-                        # picked_name = picked.nick if picked.nick is not None else picked.name
-                        response += f"I have picked <@{picked.id}>\n"
-            elif re.match(self.command_amount_reg, message_content):
-                # .pickme {amount}
-                a_s = message_content.find("{") + 1
-                a_e = message_content.find("}")
-                amount = int(message_content[a_s:a_e])
-                # The pool is all of the visible members
-                pool = visible_members
-                if(amount > 5):
-                    response = "You can't pick more than 5 random users"
-                elif(len(pool) < amount):
-                    response = "There aren't enough users to pick from!"
-                else:
-                    # This could be moved to a function perhaps
-                    # This is identical to the first if-statement
-                    picked_users = []
-                    i = 0
-                    while i < amount:
-                        option = pool[random.randint(0, len(pool)-1)]
-                        if option not in picked_users:
-                            picked_users.append(option)
-                            i += 1
-                    for picked in picked_users:
-                        response += f"I have picked <@{picked.id}>\n"
-            else:
-                # .pickme
-                pool = visible_members
-                picked = pool[random.randint(0, len(pool)-1)]
-                response = f"I have picked <@{picked.id}>"
-
-        if response != "":
+        # Help message
+        if reg_match.match(self.help_reg, message_content):
+            response = self.help_response
             await message.channel.send(response)
+
+        # Offline command
+        if reg_match.match(self.offline_reg, message_content):
+            response = "The following members are offline:\n"
+            visible_members = self._get_visible_members(chnl=message.channel,
+                                                        members=message.guild.members)
+
+            # We either filter on role or don't
+            if reg_match.match(self.offline_role_reg, message_content):
+                rs, re = self._get_role_indexes(message_content, 0)
+                role = message_content[rs:re]
+
+                members = self._get_members_by_role(role=role, members=visible_members)
+            else:
+                members = visible_members
+
+            for member in members:
+                if(member.status.value == "offline"):
+                    name = member.nick if member.nick is not None else member.name
+                    response += f"{name}\n"
+
+            if response == "The following members are offline:\n":
+                response += "No members are offline!"
+            await message.channel.send(response)
+
+        if reg_match.match(self.command_reg, message_content):
+            response = ""
+            visible_members = self._get_visible_members(chnl=message.channel,
+                                                        members=message.guild.members)
+
+            if reg_match.match(self.command_amount_role_reg, message_content):
+                # Get our amount
+                amount_index = self._get_amount_index(message_content)
+                amount = int(message_content[amount_index])
+                # Get our role
+                rs, re = self._get_role_indexes(message_content, amount_index)
+                role = message_content[rs:re]
+
+                # Filter our members
+                members = self._get_members_by_role(role=role, members=visible_members)
+            elif reg_match.match(self.command_amount_reg, message_content):
+                # Get our amount
+                amount_index = self._get_amount_index(message_content)
+                amount = int(message_content[amount_index])
+
+                # No member filtering
+                members = visible_members
+            else:
+                # Amount defaults to 1 when it isn't passed
+                amount = 1
+                # No member filtering
+                members = visible_members
+
+            if(amount > 5):
+                response = "You can't pick more than 5 random users"
+            else:
+                # DUN DUN DUUUN
+                chosen_members = self._pick_members(amount=amount, members=members)
+                for member in chosen_members:
+                    name = member.nick if member.nick is not None else member.name
+                    response += f"I have picked {name}\n"
+            if response == "":
+                response = "No members found!"
+            await message.channel.send(response)
+
 
 client = PickMe()
 client.run(TOKEN)

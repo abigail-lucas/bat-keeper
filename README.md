@@ -27,5 +27,5 @@ This is a step-by-step guide on building this project. It is aimed at new develo
 
 ## TODO
 
-- Consider if I should ping the users or just mention their names
 - Move duplicate code to methods
+- Restrict bot commands to only certain roles
