@@ -1,0 +1,19 @@
+version: "0.5"
+services:
+  bot:
+    restart: always
+    build: "."
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: XC5qvzz9g_FN%394
+      MYSQL_DATABASE: bot-db
+      MYSQL_USER: bot
+      MYSQL_PASSWORD: u@?9E*VZs&-YQz%t
+    volumes:
+      - bot-db:/var/lib/mysql
+volumes:
+  bot-db:
