@@ -15,6 +15,7 @@ This is a simple bot for pulling a name out of a hat. It pulls a list of people 
 A simple list of commands to build, and run the docker image. Make sure Docker and docker-compose is installed.
 
 - `docker-compose up`
+- `docker-compose build`
 
 Please note that the build will fail if you do not have a `.env` file in the root directory of this project. This file should simply contain the token for the bot.
 
@@ -22,7 +23,10 @@ Example of how the `.env` should look like:
 
 ```
 DISCORD_TOKEN=this-text-should-be-the-token
-MYSQL_PASSWORD=password-to-access-mysql
+MYSQL_HOST=host
+MYSQL_USER=user
+MYSQL_PASSWORD=mysql-password
+MYSQL_DB=database-name
 ```
 
 ## Softare Versions
@@ -46,3 +50,4 @@ mysql:5.7
 ## TODO
 
 - Implement authorized roles for commands
+- Figure out a way to manage the database if it's already been created

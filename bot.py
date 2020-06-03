@@ -1,12 +1,10 @@
-import os
 import random
 import discord
 import re as reg_match
-from db_connector import cur
-from dotenv import load_dotenv
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+from models import Role
+from db_connector import cur
+
 
 class PickMe(discord.Client):
     '''
@@ -131,11 +129,12 @@ Here is the command format:
         # Help message
         if reg_match.match(self.help_reg, message_content):
             response = self.help_response
-            try:
-                for x in cur:
-                    response += str(x) + '\n'
-            except e:
-                response = e
+
+            cur.excecute("SELECT * FROM Roles")
+            rows = cur.fetchall()
+            response = "Rows:"
+            for r in rows:
+                response += f"{r}\n"
             await message.channel.send(response)
 
         # Offline command
@@ -201,7 +200,3 @@ Here is the command format:
             if response == "":
                 response = "No members found!"
             await message.channel.send(response)
-
-
-client = PickMe()
-client.run(TOKEN)
