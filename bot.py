@@ -2,6 +2,7 @@ import os
 import random
 import discord
 import re as reg_match
+from db_connector import cur
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,7 +30,7 @@ Here is the command format:
 ?pickme {amount} {role} - returns as many random users with the role as the amount (max 5)
 
 ?offline                - returns the list of offline members
-?offline {role}         - returns the lift of offline members with the given role
+?offline {role}         - returns the list of offline members with the given role
 
 ?help                   - returns this help message
 ```
@@ -130,6 +131,11 @@ Here is the command format:
         # Help message
         if reg_match.match(self.help_reg, message_content):
             response = self.help_response
+            try:
+                for x in cur:
+                    response += str(x) + '\n'
+            except e:
+                response = e
             await message.channel.send(response)
 
         # Offline command
