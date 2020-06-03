@@ -3,7 +3,6 @@ import discord
 import re as reg_match
 
 from models import Role
-from db_connector import cur
 
 
 class PickMe(discord.Client):
@@ -130,12 +129,11 @@ Here is the command format:
         if reg_match.match(self.help_reg, message_content):
             response = self.help_response
 
-            cur.excecute("SELECT * FROM Roles")
-            rows = cur.fetchall()
-            response = "Rows:"
-            for r in rows:
-                response += f"{r}\n"
-            await message.channel.send(response)
+
+            role = Role()
+
+            # await message.channel.send(str(role.create_table()))
+            await message.channel.send(str(role.db.cursor().execute("SHOW DATABASES;").showall()))
 
         # Offline command
         if reg_match.match(self.offline_reg, message_content):

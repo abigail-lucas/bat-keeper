@@ -1,4 +1,6 @@
-from db_connector import cur
+import mysql.connector
+
+from config import *
 
 
 class Enum():
@@ -11,45 +13,47 @@ class AccessEnum(Enum):
     user_access = (1, "User Access")
     admin_access = (2, "Admin Access")
 
-class Role():
+
+class BaseModel():
     '''
     SQLAlchemy seems overcomplicated and peewee isn't Python3 compatible
 
-    So I decided to write a small manager for this Role
+    So I decided to write a small manager for my models
     '''
-    cursor = cur
 
-    table = "Roles"
-    name = "name"
-    guild = "guild"
-    access = "access"
-    int_type = "int"
-    varchar_255_type = "varchar(255)"
+    def __init__(self):
+        self.db = mysql.connector.connect(host=MYSQL_HOST,
+                                          user=MYSQL_USER,
+                                          passwd=MYSQL_PASSWORD,
+                                          db=MYSQL_DB)
 
-    def _get_create_query(self):
-        query = f"""CREATE TABLE {self.table} (
-            {self.name} {self.varchar_255_type},
-            {self.guild} {self.varchar_255_type},
-            {self.access} {self.int_type});
-        """
-        return query
-    
-    def _get_insert_query(self, name, guild, access):
-        query = f"""INSERT INTO {self.table}
-        ({self.name},{self.guild},{self.access})
-        VALUES ({name}, {guild}, {access});
-        """
+    def _create_table(self, table, fields):
+        '''
+        table - string: name for the table
+        fields - list of field objects
+        '''
+        query = "CREATE TABLE %s (" % table
+
+        for f in fields:
+            query += f"{f['name']} {f['type']}"
+            if f != fields[-1]:
+                query += ", "
+        query += ");"
+
+        cursor = self.db.cursor()
+        cursor.execute(query)
         return query
 
     def create_table(self):
-        self.cursor.execute(self._get_create_query())
+        return self._create_table(self.table, self.fields)
 
-    def add_row(self, name, guild, access=1):
-        self.cursor.execute(self._get_insert_query(
-            name=name, guild=guild, access=access
-        ))
 
-    def get_rows(self):
-        self.cursor.execute(f"""SELECT *
-        FROM {self.table}
-        """)
+class Role(BaseModel):
+    table = "Roles"
+
+    fields = [
+        {"name": "id", "type": "INT NOT NULL AUTO_INCREMENT"},
+        {"name": "name", "type": "VARCHAR(255) NOT NULL"},
+        {"name": "guild", "type": "VARCHAR(255) NOT NULL"},
+        {"name": "access", "type": "INT NOT NULL"}
+    ]

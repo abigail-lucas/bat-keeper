@@ -15,6 +15,7 @@ services:
       MYSQL_DATABASE: bot-db
       MYSQL_USER: bot
       MYSQL_PASSWORD: u@?9E*VZs&-YQz%t
+      MYSQL_MAX_CONNECTIONS: 1000
     volumes:
       - bot-db:/var/lib/mysql
 volumes:

@@ -1,8 +1,7 @@
-import os
+from config import DISCORD_TOKEN
 from bot import PickMe
-from dotenv import load_dotenv
 
-from db_connector import cur
+# from db_connector import cur
 # from models import Role
 
 
@@ -15,11 +14,9 @@ def main():
     - load bot
     - start bot
     '''
-    load_dotenv()
-    TOKEN = os.getenv('DISCORD_TOKEN')
 
     client = PickMe()
-    client.run(TOKEN)
+    client.run(DISCORD_TOKEN)
 
 
 if __name__ == '__main__':
