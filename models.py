@@ -42,17 +42,46 @@ class BaseModel():
 
         cursor = self.db.cursor()
         cursor.execute(query)
+        cursor.close()
         return query
 
     def create_table(self):
         return self._create_table(self.table, self.fields)
+
+    async def get_all_data(self):
+        query = f"SELECT * FROM {self.table};"
+        cursor = self.db.cursor()
+        cursor.execute(query)
+        data = cursor.fetchall()
+        cursor.close()
+        return data
+
+    def insert(self, field_data):
+        query = f"INSERT INTO {self.table} ("
+        for field in self.fields:
+            if field["name"] != "id":
+                query += field["name"]
+
+                if field != self.fields[-1]:
+                    query += ", "
+        query += ") VALUES ("
+        for field in self.fields:
+            query += "%s"
+
+            if field != self.fields[-1]:
+                query += ", "
+        query += ");"
+
+        cursor = self.db.cursor()
+        cursor.execute(query, field_data)
+        self.db.commit()
 
 
 class Role(BaseModel):
     table = "Roles"
 
     fields = [
-        {"name": "id", "type": "INT NOT NULL AUTO_INCREMENT"},
+        {"name": "id", "type": "INT NOT NULL AUTO_INCREMENT PRIMARY KEY"},
         {"name": "name", "type": "VARCHAR(255) NOT NULL"},
         {"name": "guild", "type": "VARCHAR(255) NOT NULL"},
         {"name": "access", "type": "INT NOT NULL"}

@@ -1,5 +1,6 @@
 from config import DISCORD_TOKEN
 from bot import PickMe
+from models import Role
 
 # from db_connector import cur
 # from models import Role
@@ -15,7 +16,11 @@ def main():
     - start bot
     '''
 
-    client = PickMe()
+    # role = Role()
+
+    # role.insert(("staff", "Lifechoices", "2"))
+
+    client = PickMe()#table=role.get_all_data())
     client.run(DISCORD_TOKEN)
 
 

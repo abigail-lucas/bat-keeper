@@ -2,13 +2,12 @@ import random
 import discord
 import re as reg_match
 
-from models import Role
-
 
 class PickMe(discord.Client):
     '''
     PickMe bot
     '''
+
     # regex for the commands
     command_reg = "(\?pickme {\d} {\D*})|(\?pickme {\d})|(\?pickme)"
     command_amount_role_reg = "(\?pickme {\d} {\D*})"
@@ -129,11 +128,10 @@ Here is the command format:
         if reg_match.match(self.help_reg, message_content):
             response = self.help_response
 
-
             role = Role()
+            data = await role.get_all_data()
 
-            # await message.channel.send(str(role.create_table()))
-            await message.channel.send(str(role.db.cursor().execute("SHOW DATABASES;").showall()))
+            await message.channel.send(str(data))
 
         # Offline command
         if reg_match.match(self.offline_reg, message_content):
