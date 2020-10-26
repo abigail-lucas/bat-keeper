@@ -128,10 +128,7 @@ Here is the command format:
         if reg_match.match(self.help_reg, message_content):
             response = self.help_response
 
-            role = Role()
-            data = await role.get_all_data()
-
-            await message.channel.send(str(data))
+            await message.channel.send(response)
 
         # Offline command
         if reg_match.match(self.offline_reg, message_content):
