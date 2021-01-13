@@ -1,4 +1,4 @@
-# PICKME
+# Bat Keeper
 
 This is a simple bot for pulling a name out of a hat. It pulls a list of people based on their role and chooses the amount passed.
 
@@ -32,17 +32,20 @@ MYSQL_DB=database-name
 ## Softare Versions
 
 Python
+
 ```
 Python3
 ```
 
 Docker and docker-compose
+
 ```
 Docker version 19.03.6, build 369ce74a3c
 docker-compose version 1.21.2, build a133471
 ```
 
 MySQL
+
 ```
 mysql:5.7
 ```
